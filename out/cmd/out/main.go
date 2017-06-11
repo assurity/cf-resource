@@ -23,6 +23,8 @@ func main() {
 		fatal("reading request from stdin", err)
 	}
 
+	cloudFoundry.AddCommandEnvironmentVariable(request.Source.CommandEnvironmentVariables)
+
 	// make it an absolute path
 	request.Params.ManifestPath = filepath.Join(os.Args[1], request.Params.ManifestPath)
 

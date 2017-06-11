@@ -11,10 +11,16 @@ type PAAS interface {
 	PushApp(manifest string, path string, currentAppName string) error
 }
 
-type CloudFoundry struct{}
+type CloudFoundry struct {
+	//commandEnvironment []string
+	cfEnvironment *CfEnvironment
+}
 
 func NewCloudFoundry() *CloudFoundry {
-	return &CloudFoundry{}
+	//env := os.Environ()
+	//env = append(env, "CF_COLOR=true")
+
+	return &CloudFoundry{NewCfEnvironment()}
 }
 
 func (cf *CloudFoundry) Login(api string, username string, password string, insecure bool) error {
@@ -74,11 +80,28 @@ func chdir(path string, f func() error) error {
 	return f()
 }
 
+func (cf *CloudFoundry) addCommandEnvironmentVariable(key, value string) {
+	//cf.commandEnvironment = append(cf.commandEnvironment, key+"="+value)
+	cf.cfEnvironment.addCommandEnvironmentVariable(key, value)
+}
+
+func (cf *CloudFoundry) CommandEnvironment() []string {
+	return cf.cfEnvironment.commandEnvironment
+	//return cf.commandEnvironment
+}
+
+func (cf *CloudFoundry) AddCommandEnvironmentVariable(switchMap map[string]string) {
+	//for k, v := range switchMap {
+	//	cf.addCommandEnvironmentVariable(k, v)
+	//}
+	cf.cfEnvironment.AddCommandEnvironmentVariable(switchMap)
+}
+
 func (cf *CloudFoundry) cf(args ...string) *exec.Cmd {
 	cmd := exec.Command("cf", args...)
 	cmd.Stdout = os.Stderr
 	cmd.Stderr = os.Stderr
-	cmd.Env = append(os.Environ(), "CF_COLOR=true")
+	cmd.Env = cf.cfEnvironment.commandEnvironment
 
 	return cmd
 }
