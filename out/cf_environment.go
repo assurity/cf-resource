@@ -22,22 +22,22 @@ func NewCfEnvironment() *CfEnvironment {
 func NewCfEnvironmentFromOS() *CfEnvironment {
 	cfe := NewCfEnvironment()
 
-	environment := getenvironment(os.Environ(), splitKeyValueString)
-	cfe.AddCommandEnvironmentVariable(environment)
+	osEnvironment := SplitKeyValueStringArrayInToMap(os.Environ())
+	cfe.AddEnvironmentVariable(osEnvironment)
 
 	return cfe
 }
 
-func getenvironment(data []string, getkeyval func(item string) (key, val string)) map[string]interface{} {
+func SplitKeyValueStringArrayInToMap(data []string) map[string]interface{} {
 	items := make(map[string]interface{})
 	for _, item := range data {
-		key, val := getkeyval(item)
+		key, val := SplitKeyValueString(item)
 		items[key] = val
 	}
 	return items
 }
 
-func splitKeyValueString(item string)(key, val string) {
+func SplitKeyValueString(item string)(key, val string) {
 	splits := strings.SplitN(item, "=", 2)
 	key = splits[0]
 	val = splits[1]
@@ -45,12 +45,11 @@ func splitKeyValueString(item string)(key, val string) {
 }
 
 
-func (cfe *CfEnvironment) addCommandEnvironmentVariable(key, value string) {
+func (cfe *CfEnvironment) addEnvironmentVariable(key, value string) {
 	cfe.env[key] = value
 }
 
-func (cfe *CfEnvironment) CommandEnvironment() []string {
-
+func (cfe *CfEnvironment) Environment() []string {
 	var commandEnvironment []string
 
 	for k, v := range cfe.env {
@@ -59,7 +58,7 @@ func (cfe *CfEnvironment) CommandEnvironment() []string {
 	return commandEnvironment
 }
 
-func (cfe *CfEnvironment) AddCommandEnvironmentVariable(switchMap map[string]interface{}) {
+func (cfe *CfEnvironment) AddEnvironmentVariable(switchMap map[string]interface{}) {
 	for k, v := range switchMap {
 		vString := fmt.Sprintf("%v", v)
 		cfe.env[k] = vString

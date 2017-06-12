@@ -12,14 +12,10 @@ type PAAS interface {
 }
 
 type CloudFoundry struct {
-	//commandEnvironment []string
 	cfEnvironment *CfEnvironment
 }
 
 func NewCloudFoundry() *CloudFoundry {
-	//env := os.Environ()
-	//env = append(env, "CF_COLOR=true")
-
 	return &CloudFoundry{NewCfEnvironmentFromOS()}
 }
 
@@ -84,15 +80,15 @@ func (cf *CloudFoundry) CommandEnvironment() *CfEnvironment {
 	return cf.cfEnvironment
 }
 
-func (cf *CloudFoundry) AddCommandEnvironmentVariable(switchMap map[string]interface{}) {
-	cf.cfEnvironment.AddCommandEnvironmentVariable(switchMap)
+func (cf *CloudFoundry) AddEnvironmentVariable(switchMap map[string]interface{}) {
+	cf.cfEnvironment.AddEnvironmentVariable(switchMap)
 }
 
 func (cf *CloudFoundry) cf(args ...string) *exec.Cmd {
 	cmd := exec.Command("cf", args...)
 	cmd.Stdout = os.Stderr
 	cmd.Stderr = os.Stderr
-	cmd.Env = cf.cfEnvironment.CommandEnvironment()
+	cmd.Env = cf.cfEnvironment.Environment()
 
 	return cmd
 }

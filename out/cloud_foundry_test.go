@@ -19,7 +19,7 @@ var _ = Describe("CloudFoundry", func() {
 		})
 
 		It("default command environment should contain CF_COLOR=true", func() {
-			cfEnv := cf.CommandEnvironment().CommandEnvironment()
+			cfEnv := cf.CommandEnvironment().Environment()
 			Ω(cfEnv).Should(HaveLen(baseExpectedEnvVariableCount))
 			Ω(cfEnv).Should(ContainElement("CF_COLOR=true"))
 		})
