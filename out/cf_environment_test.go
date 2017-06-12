@@ -6,30 +6,30 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"os"
-	"strings"
-	"fmt"
 )
 
-var _ = Describe("CfEnvironment", func() {
+var oneEnvironmentPair = map[string]interface{}{"ENV_ONE": "env_one"}
+
+// json from config is unmarshalled in to map[string]interface{}
+// keys are always strings, but values can be anything
+var multipleEnvironmentPairs = map[string]interface{}{
+	"ENV_ONE":   "env_one",
+	"ENV_TWO":   2,
+	"ENV_THREE": true,
+}
+var fiveEnvironmentPair = map[string]interface{}{"ENV_FIVE": "env_five"}
+
+var _ = Describe("CfEnvironment from Empty", func() {
 	Context("happy path", func() {
 		var cfEnvironment *out.CfEnvironment
-		env := os.Environ()
-		baseExpectedEnvVariables := len(env) + 1
-		oneEnvironmentPair := map[string]string{"ENV_ONE": "env_one"}
-		multipleEnvironmentPairs := map[string]string{
-			"ENV_ONE":   "env_one",
-			"ENV_TWO":   "env_two",
-			"ENV_THREE": "env_three",
-		}
-		fiveEnvironmentPair := map[string]string{"ENV_FIVE": "env_five"}
 
 		BeforeEach(func() {
 			cfEnvironment = out.NewCfEnvironment()
 		})
 
-		It("default command environment should contain CF_COLOR=true", func() {
+		It("default command environment should ONLY contain CF_COLOR=true", func() {
 			cfEnv := cfEnvironment.CommandEnvironment()
-			Ω(cfEnv).Should(HaveLen(baseExpectedEnvVariables))
+			Ω(cfEnv).Should(HaveLen(1))
 			Ω(cfEnv).Should(ContainElement("CF_COLOR=true"))
 		})
 
@@ -38,7 +38,7 @@ var _ = Describe("CfEnvironment", func() {
 			cfEnvironment.AddCommandEnvironmentVariable(oneEnvironmentPair)
 			cfEnv := cfEnvironment.CommandEnvironment()
 
-			Ω(cfEnv).Should(HaveLen(baseExpectedEnvVariables + 1))
+			Ω(cfEnv).Should(HaveLen(2))
 			Ω(cfEnv).Should(ContainElement("ENV_ONE=env_one"))
 		})
 
@@ -47,10 +47,10 @@ var _ = Describe("CfEnvironment", func() {
 			cfEnvironment.AddCommandEnvironmentVariable(multipleEnvironmentPairs)
 			cfEnv := cfEnvironment.CommandEnvironment()
 
-			Ω(cfEnv).Should(HaveLen(baseExpectedEnvVariables + 3))
+			Ω(cfEnv).Should(HaveLen(4))
 			Ω(cfEnv).Should(ContainElement("ENV_ONE=env_one"))
-			Ω(cfEnv).Should(ContainElement("ENV_TWO=env_two"))
-			Ω(cfEnv).Should(ContainElement("ENV_THREE=env_three"))
+			Ω(cfEnv).Should(ContainElement("ENV_TWO=2"))
+			Ω(cfEnv).Should(ContainElement("ENV_THREE=true"))
 		})
 
 		It("multiple adds to environment retains all additions", func() {
@@ -58,10 +58,10 @@ var _ = Describe("CfEnvironment", func() {
 			cfEnvironment.AddCommandEnvironmentVariable(fiveEnvironmentPair)
 			cfEnv := cfEnvironment.CommandEnvironment()
 
-			Ω(cfEnv).Should(HaveLen(baseExpectedEnvVariables + 4))
+			Ω(cfEnv).Should(HaveLen(5))
 			Ω(cfEnv).Should(ContainElement("ENV_ONE=env_one"))
-			Ω(cfEnv).Should(ContainElement("ENV_TWO=env_two"))
-			Ω(cfEnv).Should(ContainElement("ENV_THREE=env_three"))
+			Ω(cfEnv).Should(ContainElement("ENV_TWO=2"))
+			Ω(cfEnv).Should(ContainElement("ENV_THREE=true"))
 
 			Ω(cfEnv).Should(ContainElement("ENV_FIVE=env_five"))
 		})
@@ -69,22 +69,20 @@ var _ = Describe("CfEnvironment", func() {
 	})
 })
 
-func foo() {
-	getenvironment := func(data []string, getkeyval func(item string) (key, val string)) map[string]string {
-		items := make(map[string]string)
-		for _, item := range data {
-			key, val := getkeyval(item)
-			items[key] = val
-		}
-		return items
-	}
-	environment := getenvironment(os.Environ(), func(item string) (key, val string) {
-		//splits := strings.Split(item, "=")
-		splits := strings.SplitN(item, "=", 2)
-		key = splits[0]
-		val = splits[1]
-		return
+var _ = Describe("CfEnvironment from OS", func() {
+	Context("happy path", func() {
+		var cfEnvironment *out.CfEnvironment
+		env := os.Environ()
+		baseExpectedEnvVariables := len(env) + 1
+
+		BeforeEach(func() {
+			cfEnvironment = out.NewCfEnvironmentFromOS()
+		})
+
+		It("default command environment should contain CF_COLOR=true", func() {
+			cfEnv := cfEnvironment.CommandEnvironment()
+			Ω(cfEnv).Should(HaveLen(baseExpectedEnvVariables))
+			Ω(cfEnv).Should(ContainElement("CF_COLOR=true"))
+		})
 	})
-	fmt.Println(environment["PATH"])
-	fmt.Println("Hello!")
-}
+})

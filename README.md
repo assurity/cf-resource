@@ -70,4 +70,8 @@ resources:
     organization: ORG
     space: SPACE
     skip_cert_check: false
+    command_environment_variables:
+      CF_COLOR: true
+      CF_DIAL_TIMEOUT: 15
+      CF_TRACE: true
 ```

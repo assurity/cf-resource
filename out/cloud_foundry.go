@@ -20,7 +20,7 @@ func NewCloudFoundry() *CloudFoundry {
 	//env := os.Environ()
 	//env = append(env, "CF_COLOR=true")
 
-	return &CloudFoundry{NewCfEnvironment()}
+	return &CloudFoundry{NewCfEnvironmentFromOS()}
 }
 
 func (cf *CloudFoundry) Login(api string, username string, password string, insecure bool) error {
@@ -80,20 +80,11 @@ func chdir(path string, f func() error) error {
 	return f()
 }
 
-func (cf *CloudFoundry) addCommandEnvironmentVariable(key, value string) {
-	//cf.commandEnvironment = append(cf.commandEnvironment, key+"="+value)
-	cf.cfEnvironment.addCommandEnvironmentVariable(key, value)
+func (cf *CloudFoundry) CommandEnvironment() *CfEnvironment {
+	return cf.cfEnvironment
 }
 
-func (cf *CloudFoundry) CommandEnvironment() []string {
-	return cf.cfEnvironment.commandEnvironment
-	//return cf.commandEnvironment
-}
-
-func (cf *CloudFoundry) AddCommandEnvironmentVariable(switchMap map[string]string) {
-	//for k, v := range switchMap {
-	//	cf.addCommandEnvironmentVariable(k, v)
-	//}
+func (cf *CloudFoundry) AddCommandEnvironmentVariable(switchMap map[string]interface{}) {
 	cf.cfEnvironment.AddCommandEnvironmentVariable(switchMap)
 }
 
@@ -101,7 +92,7 @@ func (cf *CloudFoundry) cf(args ...string) *exec.Cmd {
 	cmd := exec.Command("cf", args...)
 	cmd.Stdout = os.Stderr
 	cmd.Stderr = os.Stderr
-	cmd.Env = cf.cfEnvironment.commandEnvironment
+	cmd.Env = cf.cfEnvironment.CommandEnvironment()
 
 	return cmd
 }

@@ -1,32 +1,67 @@
 package out
 
-import "os"
+import (
+	"strings"
+	"os"
+	"fmt"
+)
 
 type CfEnvironment struct {
-	commandEnvironment []string
 	env map[string]string
 }
 
 func NewCfEnvironment() *CfEnvironment {
-	//commandEnvironment := make([]string,10)
 	env := make(map[string]string)
-	commandEnvironment := os.Environ()
-	cfe := &CfEnvironment{commandEnvironment, env}
-	cfe.addCommandEnvironmentVariable("CF_COLOR", "true")
+	env["CF_COLOR"]="true"
+
+	cfe := &CfEnvironment{env}
+
 	return cfe
 }
 
+func NewCfEnvironmentFromOS() *CfEnvironment {
+	cfe := NewCfEnvironment()
 
-func (cf *CfEnvironment) addCommandEnvironmentVariable(key, value string) {
-	cf.commandEnvironment = append(cf.commandEnvironment, key+"="+value)
+	environment := getenvironment(os.Environ(), splitKeyValueString)
+	cfe.AddCommandEnvironmentVariable(environment)
+
+	return cfe
 }
 
-func (cf *CfEnvironment) CommandEnvironment() []string {
-	return cf.commandEnvironment
+func getenvironment(data []string, getkeyval func(item string) (key, val string)) map[string]interface{} {
+	items := make(map[string]interface{})
+	for _, item := range data {
+		key, val := getkeyval(item)
+		items[key] = val
+	}
+	return items
 }
 
-func (cf *CfEnvironment) AddCommandEnvironmentVariable(switchMap map[string]string) {
+func splitKeyValueString(item string)(key, val string) {
+	splits := strings.SplitN(item, "=", 2)
+	key = splits[0]
+	val = splits[1]
+	return
+}
+
+
+func (cfe *CfEnvironment) addCommandEnvironmentVariable(key, value string) {
+	cfe.env[key] = value
+}
+
+func (cfe *CfEnvironment) CommandEnvironment() []string {
+
+	var commandEnvironment []string
+
+	for k, v := range cfe.env {
+		commandEnvironment = append(commandEnvironment, k+"="+v)
+	}
+	return commandEnvironment
+}
+
+func (cfe *CfEnvironment) AddCommandEnvironmentVariable(switchMap map[string]interface{}) {
 	for k, v := range switchMap {
-		cf.addCommandEnvironmentVariable(k, v)
+		vString := fmt.Sprintf("%v", v)
+		cfe.env[k] = vString
 	}
 }

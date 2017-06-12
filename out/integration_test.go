@@ -92,7 +92,7 @@ var _ = Describe("Out", func() {
 
 	Context("when my manifest and paths do not contain a glob", func() {
 		BeforeEach(func() {
-			request.Source.CommandEnvironmentVariables = map[string]string{
+			request.Source.CommandEnvironmentVariables = map[string]interface{}{
 				"COMMAND_ENV_ONE": "command_env_one",
 				"COMMAND_ENV_TWO": "command_env_two",
 			}
